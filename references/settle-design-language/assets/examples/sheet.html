@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../settle-tokens.css">
+<link rel="stylesheet" href="../settle.css">
+<script src="../settle-motion.js"></script>
+<title>Sheet</title>
+<style>
+  .demo { position: relative; height: 360px; overflow: hidden; }
+  .demo-content { padding: var(--space-6); max-width: 420px; }
+  .demo-content p { margin: 0 0 var(--space-5); color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="demo" id="demo">
+  <div class="demo-content">
+    <h2 class="st-headline">Quarterly review</h2>
+    <p>12 sections · edited 4 minutes ago</p>
+    <button class="st-btn st-btn-primary" type="button" id="open">Share report</button>
+  </div>
+  <div class="st-sheet-scrim" id="scrim"></div>
+  <div class="st-sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <button class="st-sheet-handle" type="button" id="handle" aria-label="Drag down or press to close"></button>
+    <h3 class="st-sheet-title" id="sheet-title">Share report</h3>
+    <p class="st-sheet-desc">People with the link can view the report. Only members can edit.</p>
+    <div class="st-sheet-actions">
+      <button class="st-btn st-btn-quiet" type="button" id="cancel">Cancel</button>
+      <button class="st-btn st-btn-primary" type="button" id="copy">Copy link</button>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var S = window.Settle;
+    var sheet = document.getElementById('sheet');
+    var scrim = document.getElementById('scrim');
+    var handle = document.getElementById('handle');
+    var openBtn = document.getElementById('open');
+    var copy = document.getElementById('copy');
+    var isOpen = false, height = 0;
+
+    var y = S.spring({ from: 1, preset: 'heavy', precision: 0.0005, paint: false, onUpdate: function (v) {
+      height = sheet.offsetHeight;
+      sheet.style.transform = 'translateY(' + (v * (height + 24)).toFixed(2) + 'px)';
+      var p = S.clamp(1 - v, 0, 1);
+      scrim.style.opacity = p.toFixed(3);
+      var visible = v < 0.999;
+      sheet.style.visibility = visible ? 'visible' : 'hidden';
+      scrim.style.visibility = visible ? 'visible' : 'hidden';
+    } });
+    y.jump(1);
+
+    function open() {
+      if (isOpen) return;
+      isOpen = true;
+      y.use('heavy').to(0);
+      setTimeout(function () { copy.focus({ preventScroll: true }); }, 40);
+    }
+    function close(velocity) {
+      if (!isOpen) return;
+      isOpen = false;
+      y.use('heavy').to(1, velocity);
+      openBtn.focus({ preventScroll: true });
+    }
+
+    /* Drag: follow the finger, rubber-band past the open position, decide by distance or velocity. */
+    var dragging = false, moved = false, startY = 0, startV = 0, track = S.tracker();
+    function onDown(e) {
+      if (!isOpen || e.button !== 0) return;
+      dragging = true;
+      moved = false;
+      startY = e.clientY;
+      startV = y.value;
+      track.reset();
+      y.stop();
+      handle.setPointerCapture(e.pointerId);
+      handle.style.cursor = 'grabbing';
+    }
+    function onMove(e) {
+      if (!dragging) return;
+      if (Math.abs(e.clientY - startY) > 3) moved = true;
+      var h = sheet.offsetHeight + 24;
+      var dy = e.clientY - startY + startV * h;
+      var shown = dy < 0 ? S.rubber(dy, h) : dy;
+      track.add(shown);
+      y.jump(shown / h);
+    }
+    function onUp() {
+      if (!dragging) return;
+      dragging = false;
+      handle.style.cursor = '';
+      var h = sheet.offsetHeight + 24;
+      var vPx = track.velocity();
+      var v = vPx / h;
+      if (y.value > 0.4 || vPx > 500) close(v);
+      else y.use('heavy').to(0, v);
+    }
+    handle.addEventListener('pointerdown', onDown);
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', onUp);
+    handle.addEventListener('click', function () { if (!moved) close(0); moved = false; });
+
+    scrim.addEventListener('click', function () { close(0); });
+    document.getElementById('cancel').addEventListener('click', function () { close(0); });
+    copy.addEventListener('click', function () {
+      copy.textContent = 'Copied';
+      setTimeout(function () { close(0); copy.textContent = 'Copy link'; }, 700);
+    });
+    openBtn.addEventListener('click', open);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close(0);
+      if (e.key === 'Tab' && isOpen) {
+        var f = Array.prototype.slice.call(sheet.querySelectorAll('button'));
+        var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+    document.querySelectorAll('.st-btn').forEach(function (b) { S.press(b); });
+  })();
+</script>
+</body>
+</html>

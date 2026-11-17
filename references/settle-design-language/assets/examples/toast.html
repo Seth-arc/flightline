@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../settle-tokens.css">
+<link rel="stylesheet" href="../settle.css">
+<script src="../settle-motion.js"></script>
+<title>Toast</title>
+<style>
+  .demo { position: relative; height: 320px; overflow: hidden; }
+  .demo .st-stage { align-items: flex-start; }
+</style>
+</head>
+<body>
+<div class="demo">
+  <div class="st-stage">
+    <button class="st-btn st-btn-secondary" type="button" id="add">Show a notice</button>
+  </div>
+  <section class="st-toast-region" aria-label="Notifications" aria-live="polite" id="region"></section>
+</div>
+<script>
+  (function () {
+    var S = window.Settle;
+    var region = document.getElementById('region');
+    var add = document.getElementById('add');
+    var GAP = 8, PEEK = 14, MAX = 4;
+    var notices = [
+      { tone: 'positive', title: 'Saved', desc: 'All changes are up to date.' },
+      { tone: 'positive', title: 'Report exported', desc: 'Quarterly review.pdf is in your downloads.' },
+      { tone: 'positive', title: '3 members invited', desc: 'They will appear here once they accept.' },
+      { tone: 'signal', title: 'Sync paused', desc: 'Reconnecting. Your edits are kept on this device.' }
+    ];
+    var glyphs = {
+      positive: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+      signal: '<circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none"/>'
+    };
+    var next = 0, toasts = [], expanded = false;
+
+    function layout() {
+      var offset = 0;
+      toasts.forEach(function (t, i) {
+        if (t.leaving) return;
+        var y, s, o;
+        if (expanded) { y = -offset; s = 1; o = 1; }
+        else { y = -i * PEEK; s = 1 - i * 0.05; o = i < 3 ? 1 - i * 0.15 : 0; }
+        offset += t.el.offsetHeight + GAP;
+        t.y.to(y); t.s.to(s); t.o.to(o);
+        t.el.style.zIndex = String(100 - i);
+        t.el.setAttribute('aria-hidden', !expanded && i > 0 ? 'true' : 'false');
+      });
+      region.style.height = expanded ? offset + 'px' : (toasts.length ? toasts[0].el.offsetHeight + 'px' : '0px');
+      region.style.transform = 'translateY(0)';
+    }
+
+    function remove(t) {
+      if (t.leaving) return;
+      t.leaving = true;
+      clearTimeout(t.timer);
+      t.o.use('snappy').to(0);
+      t.y.use('snappy').to(t.y.value + 12);
+      toasts = toasts.filter(function (x) { return x !== t; });
+      setTimeout(function () { if (t.el.parentNode) t.el.parentNode.removeChild(t.el); }, 260);
+      layout();
+    }
+
+    function arm(t) {
+      clearTimeout(t.timer);
+      t.timer = setTimeout(function () { if (!expanded) remove(t); }, 6000);
+    }
+
+    function show() {
+      var n = notices[next++ % notices.length];
+      var el = document.createElement('div');
+      el.className = 'st-toast';
+      el.setAttribute('role', 'status');
+      el.innerHTML =
+        '<svg class="st-icon st-toast-glyph" data-tone="' + n.tone + '" viewBox="0 0 24 24" aria-hidden="true">' + glyphs[n.tone] + '</svg>' +
+        '<div class="st-toast-body"><p class="st-toast-title"></p><p class="st-toast-desc"></p></div>' +
+        '<button class="st-btn st-btn-quiet st-btn-compact st-btn-icon" type="button" aria-label="Dismiss">' +
+        '<svg class="st-icon st-icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>';
+      el.querySelector('.st-toast-title').textContent = n.title;
+      el.querySelector('.st-toast-desc').textContent = n.desc;
+      region.appendChild(el);
+      var st = { el: el, y: 0, s: 1, o: 0 };
+      function paint() { el.style.transform = 'translateY(' + st.y.toFixed(2) + 'px) scale(' + st.s.toFixed(4) + ')'; el.style.opacity = S.clamp(st.o, 0, 1).toFixed(3); }
+      var t = {
+        el: el,
+        y: S.spring({ from: 24, preset: 'settle', precision: 0.05, onUpdate: function (v) { st.y = v; paint(); } }),
+        s: S.spring({ from: 1, preset: 'settle', precision: 0.0005, onUpdate: function (v) { st.s = v; paint(); } }),
+        o: S.spring({ from: 0, preset: 'gentle', precision: 0.002, reducedMotion: false, onUpdate: function (v) { st.o = v; paint(); } })
+      };
+      var close = el.querySelector('button');
+      S.press(close);
+      close.addEventListener('click', function () { remove(t); });
+      toasts.unshift(t);
+      while (toasts.length > MAX) remove(toasts[toasts.length - 1]);
+      layout();
+      arm(t);
+    }
+
+    function setExpanded(v) {
+      if (expanded === v) return;
+      expanded = v;
+      layout();
+      toasts.forEach(function (t) { if (v) clearTimeout(t.timer); else arm(t); });
+    }
+    region.addEventListener('pointerenter', function () { setExpanded(true); });
+    region.addEventListener('pointerleave', function () { setExpanded(false); });
+    region.addEventListener('focusin', function () { setExpanded(true); });
+    region.addEventListener('focusout', function (e) { if (!region.contains(e.relatedTarget)) setExpanded(false); });
+    S.press(add);
+    add.addEventListener('click', show);
+    show();
+    setTimeout(show, 500);
+    setTimeout(show, 1000);
+  })();
+</script>
+</body>
+</html>

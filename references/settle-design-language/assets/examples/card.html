@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../settle-tokens.css">
+<link rel="stylesheet" href="../settle.css">
+<script src="../settle-motion.js"></script>
+<title>Card</title></head>
+<body>
+<div class="st-cards">
+  <article class="st-card" tabindex="0">
+    <p class="st-overline">Report</p>
+    <h3 class="st-card-title">Quarterly review</h3>
+    <p class="st-card-meta">12 sections · edited 4 minutes ago</p>
+  </article>
+  <article class="st-card" tabindex="0">
+    <p class="st-overline">Dataset</p>
+    <h3 class="st-card-title">Regional finance</h3>
+    <p class="st-card-meta">48,210 rows · synced today</p>
+  </article>
+  <article class="st-card" tabindex="0">
+    <p class="st-overline">Scenario</p>
+    <h3 class="st-card-title">Rate shock, 200bp</h3>
+    <p class="st-card-meta">Draft · 3 collaborators</p>
+  </article>
+</div>
+<script>
+  (function () {
+    var S = window.Settle;
+    document.querySelectorAll('.st-card').forEach(function (card) {
+      S.proximity(card, { radius: 80 });
+      var lift = S.spring({ from: 0, preset: 'settle', precision: 0.002, onUpdate: function (v) {
+        card.style.setProperty('--st-lift', S.clamp(v, 0, 1).toFixed(3));
+        card.style.setProperty('--st-lift-y', (-2 * v).toFixed(2) + 'px');
+      } });
+      function up() { lift.to(1); }
+      function down() { if (document.activeElement !== card) lift.to(0); }
+      card.addEventListener('pointerenter', function (e) { if (e.pointerType !== 'touch') up(); });
+      card.addEventListener('pointerleave', down);
+      card.addEventListener('focus', up);
+      card.addEventListener('blur', function () { lift.to(0); });
+      S.press(card, { scale: 0.99 });
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../settle-tokens.css">
+<link rel="stylesheet" href="../settle.css">
+<script src="../settle-motion.js"></script>
+<title>Segmented control</title></head>
+<body>
+<div class="st-stage">
+  <div class="st-seg" role="radiogroup" aria-label="Time range">
+    <span class="st-seg-indicator" aria-hidden="true"></span>
+    <button class="st-seg-option" type="button" role="radio" aria-checked="false" tabindex="-1">Day</button>
+    <button class="st-seg-option" type="button" role="radio" aria-checked="true" tabindex="0">Week</button>
+    <button class="st-seg-option" type="button" role="radio" aria-checked="false" tabindex="-1">Month</button>
+    <button class="st-seg-option" type="button" role="radio" aria-checked="false" tabindex="-1">Quarter</button>
+  </div>
+</div>
+<script>
+  (function () {
+    var S = window.Settle;
+    document.querySelectorAll('.st-seg').forEach(function (group) {
+      var ind = group.querySelector('.st-seg-indicator');
+      var opts = Array.prototype.slice.call(group.querySelectorAll('.st-seg-option'));
+      var x = 0, w = 0;
+      function paint() {
+        ind.style.transform = 'translateX(' + x.toFixed(2) + 'px)';
+        ind.style.width = Math.max(0, w).toFixed(2) + 'px';
+      }
+      var sx = S.spring({ preset: 'snappy', precision: 0.05, paint: false, onUpdate: function (v) { x = v; paint(); } });
+      var sw = S.spring({ preset: 'snappy', precision: 0.05, paint: false, onUpdate: function (v) { w = v; paint(); } });
+      function select(btn, animate, focus) {
+        opts.forEach(function (o) {
+          var active = o === btn;
+          o.setAttribute('aria-checked', String(active));
+          o.tabIndex = active ? 0 : -1;
+        });
+        if (focus) btn.focus();
+        if (animate) { sx.to(btn.offsetLeft); sw.to(btn.offsetWidth); }
+        else { sx.jump(btn.offsetLeft); sw.jump(btn.offsetWidth); }
+      }
+      opts.forEach(function (o, i) {
+        S.press(o, { scale: 0.98 });
+        o.addEventListener('click', function () { select(o, true, false); });
+        o.addEventListener('keydown', function (e) {
+          var next = null;
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = opts[(i + 1) % opts.length];
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = opts[(i - 1 + opts.length) % opts.length];
+          if (next) { e.preventDefault(); select(next, true, true); }
+        });
+      });
+      var initial = opts.filter(function (o) { return o.getAttribute('aria-checked') === 'true'; })[0] || opts[0];
+      select(initial, false, false);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () {
+        var cur = opts.filter(function (o) { return o.getAttribute('aria-checked') === 'true'; })[0];
+        if (cur) { sx.jump(cur.offsetLeft); sw.jump(cur.offsetWidth); }
+      });
+    });
+  })();
+</script>
+</body>
+</html>

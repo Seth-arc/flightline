@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../settle-tokens.css">
+<link rel="stylesheet" href="../settle.css">
+<script src="../settle-motion.js"></script>
+<title>Field</title>
+<style>.demo { padding: var(--space-5) var(--space-6); }</style>
+</head>
+<body>
+<div class="demo">
+  <div class="st-field">
+    <label class="st-field-label" for="email">Work email</label>
+    <input class="st-input" id="email" type="email" autocomplete="email" placeholder="name@company.com" aria-describedby="email-msg" value="jordan@">
+    <div class="st-field-msg" id="email-msg" aria-live="polite"><span class="st-field-msg-text">The invite goes to this address.</span></div>
+  </div>
+</div>
+<script>
+  (function () {
+    var S = window.Settle;
+    var input = document.getElementById('email');
+    var msg = document.getElementById('email-msg');
+    var helper = 'The invite goes to this address.';
+    var icons = {
+      critical: '<svg class="st-icon st-icon-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg>',
+      positive: '<svg class="st-icon st-icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+    };
+    var shown = false;
+    var rise = S.spring({ from: 0, preset: 'gentle', precision: 0.05, paint: false, onUpdate: function (v) {
+      msg.style.transform = 'translateY(' + v.toFixed(2) + 'px)';
+      msg.style.opacity = String(S.clamp(1 - v / 8, 0, 1));
+    } });
+    function show(tone, text) {
+      var key = tone + text;
+      if (msg.dataset.key === key) return;
+      msg.dataset.key = key;
+      if (tone) msg.dataset.tone = tone; else msg.removeAttribute('data-tone');
+      msg.innerHTML = (icons[tone] || '') + '<span class="st-field-msg-text"></span>';
+      msg.lastChild.textContent = text;
+      rise.jump(8);
+      rise.to(0);
+    }
+    function check() {
+      var v = input.value.trim();
+      var ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+      if (ok) {
+        input.removeAttribute('aria-invalid');
+        if (shown) show('positive', 'Looks right.'); else show('', helper);
+      } else {
+        shown = true;
+        input.setAttribute('aria-invalid', 'true');
+        show('critical', 'Enter an email like name@company.com.');
+      }
+    }
+    input.addEventListener('blur', check);
+    input.addEventListener('input', function () { if (shown) check(); });
+  })();
+</script>
+</body>
+</html>

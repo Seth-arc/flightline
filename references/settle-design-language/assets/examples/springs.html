@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../settle-tokens.css">
+<link rel="stylesheet" href="../settle.css">
+<script src="../settle-motion.js"></script>
+<title>Springs</title>
+<style>
+  .wrap { padding: var(--space-5) var(--space-6); }
+  .rows { display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-5); }
+  .row { display: grid; grid-template-columns: 184px 1fr 120px; align-items: center; gap: var(--space-4); }
+  .name { margin: 0; font-size: 14px; line-height: 20px; font-weight: 500; }
+  .spec { margin: 0; color: var(--ink-subtle); }
+  .track { position: relative; height: 32px; border-radius: var(--radius-full); background: var(--surface-sunken); box-shadow: inset 0 0 0 1px var(--hairline); cursor: pointer; }
+  .track::after { content: ""; position: absolute; top: 6px; bottom: 6px; right: 16px; width: 1px; background: var(--line-control); }
+  .dot { position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: var(--radius-full); background: var(--fill-primary); box-shadow: var(--shadow-knob); z-index: 1; }
+  .curve { width: 120px; height: 32px; overflow: visible; }
+  .curve path { fill: none; stroke: var(--ink-muted); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .curve line { stroke: var(--hairline); stroke-width: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="rows" id="rows"></div>
+  <button class="st-btn st-btn-secondary" type="button" id="replay">Replay</button>
+</div>
+<script>
+  (function () {
+    var S = window.Settle;
+    var rows = document.getElementById('rows');
+    var order = ['snappy', 'settle', 'gentle', 'heavy'];
+    var uses = { snappy: 'Under the finger', settle: 'Arrivals', gentle: 'Size and layout', heavy: 'Large surfaces' };
+    var items = [];
+
+    function curve(p) {
+      var x = 0, v = 0, t = 0, h = 1 / 1000, pts = [], i = 0, f;
+      while (t < 1) {
+        f = -p.stiffness * (x - 1) - p.damping * v;
+        v += (f / p.mass) * h; x += v * h; t += h;
+        if (i++ % 25 === 0) pts.push([t * 120, 28 - x * 22]);
+      }
+      return 'M0 28 ' + pts.map(function (q) { return 'L' + q[0].toFixed(1) + ' ' + q[1].toFixed(2); }).join(' ');
+    }
+
+    order.forEach(function (name) {
+      var p = S.springs[name];
+      var zeta = p.damping / (2 * Math.sqrt(p.stiffness * p.mass));
+      var row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML =
+        '<div><p class="name"></p><p class="spec st-mono"></p></div>' +
+        '<div class="track" role="button" tabindex="0"><span class="dot"></span></div>' +
+        '<svg class="curve" viewBox="0 0 120 32" aria-hidden="true"><line x1="0" y1="6" x2="120" y2="6"/><path d="' + curve(p) + '"/></svg>';
+      row.querySelector('.name').textContent = name;
+      row.querySelector('.spec').textContent = 'k ' + p.stiffness + ' · c ' + p.damping + ' · ζ ' + zeta.toFixed(2);
+      var track = row.querySelector('.track');
+      track.setAttribute('aria-label', name + ' spring: ' + uses[name] + '. Press to move the dot.');
+      var dot = row.querySelector('.dot');
+      rows.appendChild(row);
+      var item = { track: track, dot: dot, at: 0 };
+      item.s = S.spring({ from: 0, preset: name, precision: 0.0005, onUpdate: function (v) {
+        var travel = track.clientWidth - 32;
+        dot.style.transform = 'translateX(' + (v * travel).toFixed(2) + 'px)';
+      } });
+      function flip() { item.at = item.at ? 0 : 1; item.s.to(item.at); }
+      track.addEventListener('click', flip);
+      track.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
+      items.push(item);
+    });
+
+    function replay() {
+      items.forEach(function (it) { it.at = 1; it.s.jump(0); it.s.to(1); });
+    }
+    var btn = document.getElementById('replay');
+    S.press(btn);
+    btn.addEventListener('click', replay);
+    setTimeout(replay, 400);
+  })();
+</script>
+</body>
+</html>

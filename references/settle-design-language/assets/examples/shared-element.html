@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../settle-tokens.css">
+<link rel="stylesheet" href="../settle.css">
+<script src="../settle-motion.js"></script>
+<title>Shared element transition</title>
+<style>
+  .scene { position: relative; height: 360px; overflow: hidden; }
+  .scene .st-cards { padding: var(--space-6); }
+  .detail {
+    position: absolute;
+    box-sizing: border-box;
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-float);
+    overflow: hidden;
+    visibility: hidden;
+  }
+  .detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
+  .detail-more { margin-top: var(--space-5); max-width: 34em; }
+  .detail-more p { margin: 0 0 var(--space-4); color: var(--ink-muted); }
+  .detail-stats { display: flex; gap: var(--space-7); }
+  .detail-stat-label { margin: 0; font-size: 12px; line-height: 16px; color: var(--ink-subtle); }
+  .detail-stat-value { margin: 0; font-family: var(--font-mono); font-size: 28px; line-height: 32px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="scene" id="scene">
+  <div class="st-cards" id="grid">
+    <article class="st-card" tabindex="0" data-id="0">
+      <p class="st-overline">Report</p>
+      <h3 class="st-card-title">Quarterly review</h3>
+      <p class="st-card-meta">12 sections · edited 4 minutes ago</p>
+    </article>
+    <article class="st-card" tabindex="0" data-id="1">
+      <p class="st-overline">Dataset</p>
+      <h3 class="st-card-title">Regional finance</h3>
+      <p class="st-card-meta">48,210 rows · synced today</p>
+    </article>
+    <article class="st-card" tabindex="0" data-id="2">
+      <p class="st-overline">Scenario</p>
+      <h3 class="st-card-title">Rate shock, 200bp</h3>
+      <p class="st-card-meta">Draft · 3 collaborators</p>
+    </article>
+  </div>
+  <section class="detail" id="detail" role="region" aria-labelledby="detail-title">
+    <div class="detail-head">
+      <div>
+        <p class="st-overline" id="detail-over"></p>
+        <h3 class="st-card-title" id="detail-title"></h3>
+        <p class="st-card-meta" id="detail-meta"></p>
+      </div>
+      <button class="st-btn st-btn-secondary st-btn-compact" type="button" id="back">Back</button>
+    </div>
+    <div class="detail-more" id="more">
+      <p>The detail view grows out of the card you chose. Its title never leaves the screen, so your eye has nothing to re-find.</p>
+      <div class="detail-stats">
+        <div><p class="detail-stat-label">Sections</p><p class="detail-stat-value">12</p></div>
+        <div><p class="detail-stat-label">Reviewers</p><p class="detail-stat-value">4</p></div>
+        <div><p class="detail-stat-label">Open notes</p><p class="detail-stat-value">7</p></div>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+  (function () {
+    var S = window.Settle;
+    var scene = document.getElementById('scene');
+    var grid = document.getElementById('grid');
+    var detail = document.getElementById('detail');
+    var more = document.getElementById('more');
+    var back = document.getElementById('back');
+    var cards = Array.prototype.slice.call(grid.querySelectorAll('.st-card'));
+    var from = null, to = null, active = null, INSET = 24;
+
+    function rectOf(el) {
+      var s = scene.getBoundingClientRect(), r = el.getBoundingClientRect();
+      return { x: r.left - s.left, y: r.top - s.top, w: r.width, h: r.height };
+    }
+    /* One spring, 0 = card, 1 = detail. Geometry interpolates; content follows after the shape leads. */
+    var p = S.spring({ from: 0, preset: 'heavy', precision: 0.0005, paint: false, onUpdate: function (v) {
+      if (!from) return;
+      var t = v;
+      detail.style.left = S.lerp(from.x, to.x, t).toFixed(2) + 'px';
+      detail.style.top = S.lerp(from.y, to.y, t).toFixed(2) + 'px';
+      detail.style.width = S.lerp(from.w, to.w, t).toFixed(2) + 'px';
+      detail.style.height = S.lerp(from.h, to.h, t).toFixed(2) + 'px';
+      var reveal = S.clamp((v - 0.55) / 0.45, 0, 1);
+      more.style.opacity = reveal.toFixed(3);
+      more.style.transform = 'translateY(' + ((1 - reveal) * 8).toFixed(2) + 'px)';
+      back.style.opacity = reveal.toFixed(3);
+      var others = S.clamp(1 - v * 3, 0, 1);
+      cards.forEach(function (c) { if (c !== active) c.style.opacity = others.toFixed(3); });
+    }, onRest: function (v) {
+      if (v === 0 && active) {
+        detail.style.visibility = 'hidden';
+        active.style.visibility = 'visible';
+        active.focus({ preventScroll: true });
+        active = null;
+      }
+    } });
+
+    function open(card) {
+      if (active) return;
+      active = card;
+      detail.querySelector('#detail-over').textContent = card.querySelector('.st-overline').textContent;
+      detail.querySelector('#detail-title').textContent = card.querySelector('.st-card-title').textContent;
+      detail.querySelector('#detail-meta').textContent = card.querySelector('.st-card-meta').textContent;
+      from = rectOf(card);
+      to = { x: INSET, y: INSET, w: scene.clientWidth - INSET * 2, h: scene.clientHeight - INSET * 2 };
+      card.style.visibility = 'hidden';
+      detail.style.visibility = 'visible';
+      p.to(1);
+      setTimeout(function () { back.focus({ preventScroll: true }); }, 60);
+    }
+    function close() {
+      if (!active) return;
+      from = rectOf(active);
+      p.to(0);
+    }
+    cards.forEach(function (c) {
+      c.addEventListener('click', function () { open(c); });
+      c.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(c); } });
+    });
+    S.press(back);
+    back.addEventListener('click', close);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+interface:
+  display_name: Flightline
+  short_description: Design coherently, build small, verify changes.
+  default_prompt: Use $flightline to design or implement this change while preserving
+    intent, limiting complexity, and verifying the result.
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

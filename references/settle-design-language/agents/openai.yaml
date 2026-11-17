@@ -1,0 +1,5 @@
+interface:
+  display_name: "Settle design language"
+  short_description: "Calm, tactile UI with spring-based motion"
+  brand_color: "#2F55D4"
+  default_prompt: "Use $settle-design-language to build this page with Settle tokens, components and spring motion."

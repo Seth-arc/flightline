@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../settle-tokens.css">
+<link rel="stylesheet" href="../settle.css">
+<script src="../settle-motion.js"></script>
+<title>Editorial metaphors</title>
+<style>
+  .wrap { padding: var(--space-5) var(--space-6); }
+  .stage { position: relative; height: 230px; margin: var(--space-4) 0; }
+  .block { position: absolute; top: 0; left: 0; width: 112px; height: 72px; border-radius: var(--radius-lg); transition: border-radius var(--dur-gentle) var(--ease-spring-gentle); }
+  .b0 { background: var(--stone); }
+  .b1 { background: var(--surface-raised); box-shadow: inset 0 0 0 1px var(--line), var(--shadow-rest); }
+  .b2 { background: var(--signal); }
+  .b3 { background: var(--fill-primary); box-shadow: var(--shadow-lift); }
+  .stage[data-mode="layers"] .b1 { box-shadow: inset 0 0 0 1px var(--line), var(--shadow-lift); }
+  .stage[data-mode="together"] .block { box-shadow: none; }
+  .stage[data-mode="together"] .b0 { border-radius: var(--radius-lg) var(--radius-xs) var(--radius-xs) var(--radius-xs); }
+  .stage[data-mode="together"] .b1 { border-radius: var(--radius-xs) var(--radius-lg) var(--radius-xs) var(--radius-xs); box-shadow: inset 0 0 0 1px var(--line); }
+  .stage[data-mode="together"] .b2 { border-radius: var(--radius-xs) var(--radius-xs) var(--radius-lg) var(--radius-xs); }
+  .stage[data-mode="together"] .b3 { border-radius: var(--radius-xs) var(--radius-xs) var(--radius-xs) var(--radius-lg); }
+  .rule { position: absolute; left: 0; top: 0; height: 1px; background: var(--line-control); transform-origin: 0 50%; transform: scaleX(0); }
+  .caption { min-height: 32px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="st-seg" role="radiogroup" aria-label="Metaphor" id="seg">
+    <span class="st-seg-indicator" aria-hidden="true"></span>
+    <button class="st-seg-option" type="button" role="radio" aria-checked="true" tabindex="0" data-mode="layers">Layers</button>
+    <button class="st-seg-option" type="button" role="radio" aria-checked="false" tabindex="-1" data-mode="alignment">Alignment</button>
+    <button class="st-seg-option" type="button" role="radio" aria-checked="false" tabindex="-1" data-mode="together">Together</button>
+  </div>
+  <div class="stage" id="stage" data-mode="layers" aria-hidden="true">
+    <span class="rule" id="rule"></span>
+    <span class="block b0"></span>
+    <span class="block b1"></span>
+    <span class="block b2"></span>
+    <span class="block b3"></span>
+  </div>
+  <p class="st-pull-quote caption" id="caption" aria-live="polite">Layers reveal complexity.</p>
+</div>
+<script>
+  (function () {
+    var S = window.Settle;
+    var stage = document.getElementById('stage');
+    var rule = document.getElementById('rule');
+    var caption = document.getElementById('caption');
+    var blocks = Array.prototype.slice.call(stage.querySelectorAll('.block'));
+    var W = 112, H = 72, GAP = 16, JOIN = 4;
+    var words = { layers: 'Layers reveal complexity.', alignment: 'Alignment creates clarity.', together: 'Separate parts come together.' };
+    var presetFor = { layers: 'settle', alignment: 'gentle', together: 'heavy' };
+
+    function targets(mode) {
+      var cx = stage.clientWidth / 2, cy = stage.clientHeight / 2;
+      return blocks.map(function (b, i) {
+        if (mode === 'layers') return { x: cx - W / 2 - 54 + i * 36, y: cy - H / 2 - 42 + i * 28 };
+        if (mode === 'alignment') { var row = 4 * W + 3 * GAP; return { x: cx - row / 2 + i * (W + GAP), y: cy - H / 2 }; }
+        var order = [0, 1, 3, 2][i];
+        return { x: cx - W - JOIN / 2 + (order % 2) * (W + JOIN), y: cy - H - JOIN / 2 + Math.floor(order / 2) * (H + JOIN) };
+      });
+    }
+
+    var state = blocks.map(function (b) {
+      var st = { x: 0, y: 0 };
+      function paint() { b.style.transform = 'translate(' + st.x.toFixed(2) + 'px, ' + st.y.toFixed(2) + 'px)'; }
+      return {
+        x: S.spring({ preset: 'settle', precision: 0.05, paint: false, onUpdate: function (v) { st.x = v; paint(); } }),
+        y: S.spring({ preset: 'settle', precision: 0.05, paint: false, onUpdate: function (v) { st.y = v; paint(); } })
+      };
+    });
+    var ruleS = S.spring({ from: 0, preset: 'gentle', precision: 0.001, onUpdate: function (v) {
+      rule.style.transform = 'scaleX(' + S.clamp(v, 0, 1).toFixed(4) + ')';
+    } });
+    var textS = S.spring({ from: 1, preset: 'gentle', precision: 0.002, reducedMotion: false, onUpdate: function (v) {
+      caption.style.opacity = S.clamp(v, 0, 1).toFixed(3);
+    } });
+
+    var mode = 'layers', timers = [];
+    function go(next, animate) {
+      mode = next;
+      stage.setAttribute('data-mode', next);
+      timers.forEach(clearTimeout); timers = [];
+      var t = targets(next);
+      var row = 4 * W + 3 * GAP;
+      rule.style.width = row + 'px';
+      rule.style.left = (stage.clientWidth / 2 - row / 2) + 'px';
+      rule.style.top = (stage.clientHeight / 2 + H / 2 + 12) + 'px';
+      ruleS.to(0);
+      state.forEach(function (s, i) {
+        if (!animate) { s.x.jump(t[i].x); s.y.jump(t[i].y); return; }
+        timers.push(setTimeout(function () { s.x.use(presetFor[next]).to(t[i].x); s.y.use(presetFor[next]).to(t[i].y); }, i * 30));
+      });
+      if (next === 'alignment') timers.push(setTimeout(function () { ruleS.to(1); }, animate ? 520 : 0));
+      if (animate) {
+        textS.to(0);
+        timers.push(setTimeout(function () { caption.textContent = words[next]; textS.to(1); }, 180));
+      } else caption.textContent = words[next];
+    }
+
+    /* Segmented control: same pattern as the SegmentedControl component. */
+    var seg = document.getElementById('seg');
+    var ind = seg.querySelector('.st-seg-indicator');
+    var opts = Array.prototype.slice.call(seg.querySelectorAll('.st-seg-option'));
+    var ix = 0, iw = 0;
+    function paintInd() { ind.style.transform = 'translateX(' + ix.toFixed(2) + 'px)'; ind.style.width = iw.toFixed(2) + 'px'; }
+    var sx = S.spring({ preset: 'snappy', precision: 0.05, paint: false, onUpdate: function (v) { ix = v; paintInd(); } });
+    var sw = S.spring({ preset: 'snappy', precision: 0.05, paint: false, onUpdate: function (v) { iw = v; paintInd(); } });
+    function select(btn, animate, focus) {
+      opts.forEach(function (o) { var a = o === btn; o.setAttribute('aria-checked', String(a)); o.tabIndex = a ? 0 : -1; });
+      if (focus) btn.focus();
+      if (animate) { sx.to(btn.offsetLeft); sw.to(btn.offsetWidth); } else { sx.jump(btn.offsetLeft); sw.jump(btn.offsetWidth); }
+      if (btn.getAttribute('data-mode') !== mode || !animate) go(btn.getAttribute('data-mode'), animate);
+    }
+    opts.forEach(function (o, i) {
+      S.press(o, { scale: 0.98 });
+      o.addEventListener('click', function () { select(o, true, false); });
+      o.addEventListener('keydown', function (e) {
+        var n = null;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') n = opts[(i + 1) % opts.length];
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') n = opts[(i - 1 + opts.length) % opts.length];
+        if (n) { e.preventDefault(); select(n, true, true); }
+      });
+    });
+    select(opts[0], false, false);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () {
+      var cur = opts.filter(function (o) { return o.getAttribute('aria-checked') === 'true'; })[0];
+      sx.jump(cur.offsetLeft); sw.jump(cur.offsetWidth);
+    });
+    window.addEventListener('resize', function () { go(mode, false); });
+  })();
+</script>
+</body>
+</html>

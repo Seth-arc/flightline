@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../settle-tokens.css">
+<link rel="stylesheet" href="../settle.css">
+<script src="../settle-motion.js"></script>
+<title>Tooltip</title>
+<style>
+  .demo { position: relative; padding: var(--space-8) var(--space-6) var(--space-5); }
+  .toolbar { display: inline-flex; gap: var(--space-1); padding: var(--space-1); border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--shadow-rest); }
+</style>
+</head>
+<body>
+<div class="demo" id="demo">
+  <div class="toolbar" role="toolbar" aria-label="Formatting">
+    <button class="st-btn st-btn-quiet st-btn-icon" type="button" aria-label="Add section" data-tip="Add section">
+      <svg class="st-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <button class="st-btn st-btn-quiet st-btn-icon" type="button" aria-label="Mark as reviewed" data-tip="Mark as reviewed">
+      <svg class="st-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    </button>
+    <button class="st-btn st-btn-quiet st-btn-icon" type="button" aria-label="Next section" data-tip="Next section">
+      <svg class="st-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13.5 6.5L19 12l-5.5 5.5"/></svg>
+    </button>
+    <button class="st-btn st-btn-quiet st-btn-icon" type="button" aria-label="Close editor" data-tip="Close editor">
+      <svg class="st-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>
+    </button>
+  </div>
+  <div class="st-tooltip" id="tip" role="tooltip"></div>
+</div>
+<script>
+  (function () {
+    var S = window.Settle;
+    var demo = document.getElementById('demo');
+    var tip = document.getElementById('tip');
+    var DELAY = 500, GRACE = 300;
+    var showTimer = 0, hideTimer = 0, warm = false, current = null;
+    var st = { x: 0, o: 0 };
+    function paint() {
+      var o = S.clamp(st.o, 0, 1);
+      tip.style.opacity = o.toFixed(3);
+      tip.style.transform = 'translate(' + st.x.toFixed(2) + 'px, ' + (tipY + (1 - o) * 4).toFixed(2) + 'px) scale(' + (0.96 + 0.04 * o).toFixed(4) + ')';
+    }
+    var tipY = 0;
+    var x = S.spring({ preset: 'snappy', precision: 0.05, paint: false, onUpdate: function (v) { st.x = v; paint(); } });
+    var o = S.spring({ preset: 'snappy', precision: 0.002, reducedMotion: false, paint: false, onUpdate: function (v) { st.o = v; paint(); } });
+
+    function place(btn, glide) {
+      tip.textContent = btn.getAttribute('data-tip');
+      var d = demo.getBoundingClientRect(), b = btn.getBoundingClientRect();
+      var tx = b.left - d.left + b.width / 2 - tip.offsetWidth / 2;
+      tipY = b.top - d.top - tip.offsetHeight - 8;
+      if (glide) x.to(tx); else x.jump(tx);
+    }
+    function show(btn, instant) {
+      clearTimeout(showTimer); clearTimeout(hideTimer);
+      var go = function () {
+        var glide = warm && current && current !== btn;
+        current = btn;
+        btn.setAttribute('aria-describedby', 'tip');
+        place(btn, glide);
+        warm = true;
+        o.to(1);
+      };
+      if (instant || warm) go(); else showTimer = setTimeout(go, DELAY);
+    }
+    function hide(btn) {
+      clearTimeout(showTimer);
+      if (btn) btn.removeAttribute('aria-describedby');
+      o.to(0);
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(function () { warm = false; current = null; }, GRACE);
+    }
+    document.querySelectorAll('[data-tip]').forEach(function (btn) {
+      S.press(btn);
+      btn.addEventListener('pointerenter', function (e) { if (e.pointerType !== 'touch') show(btn, false); });
+      btn.addEventListener('pointerleave', function () { hide(btn); });
+      btn.addEventListener('focus', function () { show(btn, true); });
+      btn.addEventListener('blur', function () { hide(btn); });
+      btn.addEventListener('pointerdown', function () { hide(btn); });
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(current); });
+  })();
+</script>
+</body>
+</html>

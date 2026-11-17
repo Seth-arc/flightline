@@ -1,0 +1,151 @@
+/* Settle tokens, generated from tokens.json. Light is the default; dark applies with
+   [data-theme="dark"] on <html>, or automatically from the OS unless [data-theme="light"] is set. */
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,300..500;1,6..72,300..400&display=swap");
+
+:root,
+[data-theme="light"] {
+  --surface: #f5f4f0;
+  --surface-raised: #fcfbf9;
+  --surface-sunken: #ebe9e3;
+  --surface-overlay: #fcfbf9;
+  --ink: #1b1b19;
+  --ink-muted: #5c5a54;
+  --ink-subtle: #6b6862;
+  --hairline: #e2dfd7;
+  --line: #d3cfc5;
+  --line-control: #837f75;
+  --stone: #d9d5ca;
+  --fill-primary: var(--ink);
+  --on-fill-primary: var(--surface);
+  --signal: #2f55d4;
+  --signal-soft: #e4e9f8;
+  --on-signal: #ffffff;
+  --focus-ring: var(--signal);
+  --positive: #0e6b5c;
+  --positive-soft: #dcefe9;
+  --caution: #7a5c00;
+  --caution-soft: #f3ecd2;
+  --critical: #b3261e;
+  --critical-soft: #f8e1de;
+  --scrim: rgba(18, 18, 17, 0.28);
+  --shadow-rest: 0 0 0 1px rgba(27, 27, 25, 0.05), 0 1px 2px rgba(27, 27, 25, 0.06);
+  --shadow-lift: 0 0 0 1px rgba(27, 27, 25, 0.05), 0 6px 16px -4px rgba(27, 27, 25, 0.12);
+  --shadow-float: 0 0 0 1px rgba(27, 27, 25, 0.06), 0 16px 40px -12px rgba(27, 27, 25, 0.22);
+  --shadow-sheet: 0 0 0 1px rgba(27, 27, 25, 0.06), 0 -8px 40px -8px rgba(27, 27, 25, 0.18);
+  --shadow-knob: 0 1px 1px rgba(27, 27, 25, 0.08), 0 2px 6px rgba(27, 27, 25, 0.14);
+}
+
+[data-theme="dark"] {
+  --surface: #121211;
+  --surface-raised: #1b1b19;
+  --surface-sunken: #0b0b0a;
+  --surface-overlay: #232321;
+  --ink: #eeece7;
+  --ink-muted: #a6a39b;
+  --ink-subtle: #8f8c84;
+  --hairline: #2a2a27;
+  --line: #383733;
+  --line-control: #77746c;
+  --stone: #3a3934;
+  --fill-primary: var(--ink);
+  --on-fill-primary: var(--surface);
+  --signal: #8aa8ff;
+  --signal-soft: #18213d;
+  --on-signal: #0a1230;
+  --focus-ring: var(--signal);
+  --positive: #4cc2a5;
+  --positive-soft: #10302a;
+  --caution: #e8c547;
+  --caution-soft: #302a0e;
+  --critical: #ff8a7a;
+  --critical-soft: #3a1714;
+  --scrim: rgba(0, 0, 0, 0.56);
+  --shadow-rest: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-lift: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 8px 20px -6px rgba(0, 0, 0, 0.6);
+  --shadow-float: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 48px -12px rgba(0, 0, 0, 0.7);
+  --shadow-sheet: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 -12px 48px -8px rgba(0, 0, 0, 0.75);
+  --shadow-knob: 0 1px 1px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface: #121211;
+    --surface-raised: #1b1b19;
+    --surface-sunken: #0b0b0a;
+    --surface-overlay: #232321;
+    --ink: #eeece7;
+    --ink-muted: #a6a39b;
+    --ink-subtle: #8f8c84;
+    --hairline: #2a2a27;
+    --line: #383733;
+    --line-control: #77746c;
+    --stone: #3a3934;
+    --fill-primary: var(--ink);
+    --on-fill-primary: var(--surface);
+    --signal: #8aa8ff;
+    --signal-soft: #18213d;
+    --on-signal: #0a1230;
+    --focus-ring: var(--signal);
+    --positive: #4cc2a5;
+    --positive-soft: #10302a;
+    --caution: #e8c547;
+    --caution-soft: #302a0e;
+    --critical: #ff8a7a;
+    --critical-soft: #3a1714;
+    --scrim: rgba(0, 0, 0, 0.56);
+    --shadow-rest: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-lift: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 8px 20px -6px rgba(0, 0, 0, 0.6);
+    --shadow-float: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 48px -12px rgba(0, 0, 0, 0.7);
+    --shadow-sheet: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 -12px 48px -8px rgba(0, 0, 0, 0.75);
+    --shadow-knob: 0 1px 1px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+}
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 144px;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 999px;
+  --dur-instant: 90ms;
+  --dur-quick: 160ms;
+  --dur-snappy: 340ms;
+  --dur-gentle: 540ms;
+  --dur-settle: 570ms;
+  --dur-scene: 800ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring-snappy: linear(0, 0.045, 0.15, 0.284, 0.425, 0.559, 0.677, 0.776, 0.856, 0.917, 0.961, 0.992, 1.012, 1.023, 1.028, 1.029, 1.027, 1.024, 1.02, 1.016, 1.012, 1.009, 1.006, 1.004, 1);
+  --ease-spring-settle: linear(0, 0.071, 0.232, 0.431, 0.619, 0.78, 0.904, 0.99, 1.043, 1.068, 1.075, 1.069, 1.056, 1.042, 1.028, 1.016, 1.007, 1, 0.997, 0.995, 0.994, 0.995, 0.996, 0.997, 1);
+  --ease-spring-gentle: linear(0, 0.048, 0.157, 0.293, 0.432, 0.564, 0.677, 0.77, 0.843, 0.9, 0.941, 0.97, 0.989, 1.002, 1.009, 1.012, 1.013, 1.012, 1.011, 1.009, 1.007, 1.006, 1.004, 1.003, 1);
+  --ease-spring-heavy: linear(0, 0.048, 0.157, 0.293, 0.432, 0.562, 0.675, 0.769, 0.843, 0.899, 0.94, 0.969, 0.989, 1.001, 1.008, 1.011, 1.012, 1.012, 1.01, 1.009, 1.007, 1.005, 1.004, 1.003, 1);
+  --font-display: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Geist", "Helvetica Neue", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* Type styles: class="st-type-<style>" */
+.st-type-display-xl { font-family: var(--font-display); font-size: 72px; line-height: 76px; font-weight: 300; letter-spacing: -0.02em; font-variation-settings: 'opsz' 72; }
+.st-type-display { font-family: var(--font-display); font-size: 52px; line-height: 56px; font-weight: 300; letter-spacing: -0.015em; font-variation-settings: 'opsz' 60; }
+.st-type-headline { font-family: var(--font-display); font-size: 34px; line-height: 40px; font-weight: 400; letter-spacing: -0.01em; font-variation-settings: 'opsz' 36; }
+.st-type-pull-quote { font-family: var(--font-display); font-size: 24px; line-height: 32px; font-weight: 300; font-style: italic; font-variation-settings: 'opsz' 24; }
+.st-type-title { font-family: var(--font-sans); font-size: 22px; line-height: 28px; font-weight: 500; letter-spacing: -0.01em; }
+.st-type-heading { font-family: var(--font-sans); font-size: 17px; line-height: 24px; font-weight: 550; letter-spacing: -0.005em; }
+.st-type-body { font-family: var(--font-sans); font-size: 15px; line-height: 24px; font-weight: 400; }
+.st-type-body-small { font-family: var(--font-sans); font-size: 13px; line-height: 20px; font-weight: 400; }
+.st-type-label { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 500; }
+.st-type-caption { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; }
+.st-type-numeric { font-family: var(--font-mono); font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.st-type-code { font-family: var(--font-mono); font-size: 13px; line-height: 20px; font-weight: 400; font-variant-numeric: tabular-nums; }

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../settle-tokens.css">
+<link rel="stylesheet" href="../settle.css">
+<script src="../settle-motion.js"></script>
+<title>Toggle</title>
+<style>.demo { max-width: 440px; padding: var(--space-4) var(--space-6); }</style>
+</head>
+<body>
+<div class="demo">
+  <label class="st-setting">
+    <span class="st-setting-text">
+      <span class="st-setting-title">Sync across devices</span>
+      <span class="st-setting-desc">Changes appear everywhere you're signed in.</span>
+    </span>
+    <button class="st-toggle" type="button" role="switch" aria-checked="true"><span class="st-toggle-fill"></span><span class="st-toggle-knob"></span></button>
+  </label>
+  <label class="st-setting">
+    <span class="st-setting-text">
+      <span class="st-setting-title">Weekly summary</span>
+      <span class="st-setting-desc">One email on Monday mornings.</span>
+    </span>
+    <button class="st-toggle" type="button" role="switch" aria-checked="false"><span class="st-toggle-fill"></span><span class="st-toggle-knob"></span></button>
+  </label>
+</div>
+<script>
+  (function () {
+    var S = window.Settle;
+    var TRAVEL = 18, STRETCH = 4;
+    document.querySelectorAll('.st-toggle').forEach(function (t) {
+      var knob = t.querySelector('.st-toggle-knob');
+      var fill = t.querySelector('.st-toggle-fill');
+      var on = t.getAttribute('aria-checked') === 'true';
+      var pos = on ? 1 : 0, stretch = 0;
+      function paint() {
+        var p = S.clamp(pos, -0.2, 1.2);
+        knob.style.width = (22 + STRETCH * stretch) + 'px';
+        knob.style.transform = 'translateX(' + (p * (TRAVEL - STRETCH * stretch)).toFixed(2) + 'px)';
+        fill.style.opacity = S.clamp(pos, 0, 1).toFixed(3);
+      }
+      var p = S.spring({ from: pos, preset: 'snappy', precision: 0.001, onUpdate: function (v) { pos = v; paint(); } });
+      var w = S.spring({ from: 0, preset: 'snappy', precision: 0.001, onUpdate: function (v) { stretch = v; paint(); } });
+      t.addEventListener('pointerdown', function (e) { if (e.button === 0) w.to(1); });
+      ['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach(function (ev) { t.addEventListener(ev, function () { w.to(0); }); });
+      t.addEventListener('click', function () {
+        on = !on;
+        t.setAttribute('aria-checked', String(on));
+        p.to(on ? 1 : 0);
+      });
+    });
+  })();
+</script>
+</body>
+</html>

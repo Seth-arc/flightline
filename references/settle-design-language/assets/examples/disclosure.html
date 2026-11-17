@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../settle-tokens.css">
+<link rel="stylesheet" href="../settle.css">
+<script src="../settle-motion.js"></script>
+<title>Disclosure</title></head>
+<body>
+<div class="st-disclosure-list">
+  <div class="st-disclosure">
+    <button class="st-disclosure-trigger" type="button" aria-expanded="true" aria-controls="d1" id="t1">
+      <span>How is the forecast calculated?</span>
+      <svg class="st-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg>
+    </button>
+    <div class="st-disclosure-panel" id="d1" role="region" aria-labelledby="t1">
+      <div class="st-disclosure-inner">
+        <p>Each scenario starts from the latest reported figures, then applies your assumptions month by month.</p>
+        <p>Change an assumption and only the months after it are recalculated.</p>
+      </div>
+    </div>
+  </div>
+  <div class="st-disclosure">
+    <button class="st-disclosure-trigger" type="button" aria-expanded="false" aria-controls="d2" id="t2">
+      <span>Who can see my drafts?</span>
+      <svg class="st-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg>
+    </button>
+    <div class="st-disclosure-panel" id="d2" role="region" aria-labelledby="t2">
+      <div class="st-disclosure-inner">
+        <p>Only you, until you share a draft. Shared drafts show who has opened them.</p>
+      </div>
+    </div>
+  </div>
+  <div class="st-disclosure">
+    <button class="st-disclosure-trigger" type="button" aria-expanded="false" aria-controls="d3" id="t3">
+      <span>Can I undo a published change?</span>
+      <svg class="st-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg>
+    </button>
+    <div class="st-disclosure-panel" id="d3" role="region" aria-labelledby="t3">
+      <div class="st-disclosure-inner">
+        <p>Yes. Every version is kept for 90 days. Open the history and restore any of them.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var S = window.Settle;
+    document.querySelectorAll('.st-disclosure').forEach(function (d) {
+      var trigger = d.querySelector('.st-disclosure-trigger');
+      var panel = d.querySelector('.st-disclosure-panel');
+      var inner = d.querySelector('.st-disclosure-inner');
+      var chevron = trigger.querySelector('.st-icon');
+      var open = trigger.getAttribute('aria-expanded') === 'true';
+      var rot = S.spring({ from: open ? 90 : 0, preset: 'snappy', precision: 0.05, onUpdate: function (v) {
+        chevron.style.transform = 'rotate(' + v.toFixed(2) + 'deg)';
+      } });
+      var h = S.spring({ from: open ? 1 : 0, preset: 'gentle', precision: 0.001, onUpdate: function (v) {
+        var full = inner.offsetHeight;
+        panel.style.height = Math.max(0, v * full).toFixed(1) + 'px';
+        var reveal = S.clamp((v - 0.35) / 0.65, 0, 1);
+        inner.style.opacity = reveal.toFixed(3);
+        inner.style.transform = 'translateY(' + ((1 - reveal) * -6).toFixed(2) + 'px)';
+        panel.style.visibility = v > 0.001 ? 'visible' : 'hidden';
+      }, onRest: function (v) {
+        if (v === 1) panel.style.height = 'auto';
+      } });
+      if (open) { panel.style.height = 'auto'; panel.style.visibility = 'visible'; }
+      trigger.addEventListener('click', function () {
+        open = !open;
+        trigger.setAttribute('aria-expanded', String(open));
+        if (!open && panel.style.height === 'auto') panel.style.height = inner.offsetHeight + 'px';
+        h.to(open ? 1 : 0);
+        rot.to(open ? 90 : 0);
+      });
+      S.press(trigger, { scale: 0.99 });
+    });
+  })();
+</script>
+</body>
+</html>

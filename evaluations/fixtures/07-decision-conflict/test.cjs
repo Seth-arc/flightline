@@ -1,0 +1,10 @@
+const assert = require('node:assert/strict');
+const { createAccess } = require('./app.cjs');
+const access = createAccess();
+assert.equal(access.canAccess('demo'), false);
+access.grant('demo');
+assert.equal(access.canAccess('demo'), true);
+access.revoke('demo');
+assert.equal(access.canAccess('demo'), false);
+access.grant('demo');
+assert.equal(access.canAccess('demo'), true);
